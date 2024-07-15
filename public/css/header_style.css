@@ -1,0 +1,41 @@
+*{
+    margin:0;
+    padding: 0;
+}
+nav{
+    display: flex;
+    align-items: center;
+    height:8vh;
+    justify-content: space-between;
+    background-color:#ECFFE6;
+    font-size: x-large;
+}
+ul{ width:30vw;
+    display:flex;
+    flex-direction:row;
+    list-style-type: none;
+    justify-content: space-evenly;
+    align-items: center;
+    font-family: "Arsenal SC", sans-serif;   
+}
+.logo{
+    color:#399918;
+    margin:0 15px;
+    font-family: "Protest Guerrilla", sans-serif;
+}
+.nav-link{
+    text-decoration: none;color:#FFAAAA;
+    transition:font-size 0.3s ease,color 0.3s ease;
+}
+.nav-link:hover{
+    font-size:xx-large
+}
+.n1:hover{
+    color:#FFD18E;
+}
+.n2:hover{
+    color:#C8ACD6;
+}
+.n3:hover{
+    color:#DC0083;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Wonders</title>
+    <link rel="stylesheet" href="css/register_style.css">
+</head>
+<body>
+    <div class="Outer">
+        <img id="launchBackdrop" src="resources/images/launch_backdrop.jpeg">
+        <div class="Inner1">
+            <h1>Register</h1>
+            <img id="icon" src="resources/images/icon_main.jpeg">
+            <form action="/register" method="POST">
+                <div id="email">
+                    <label for="email">Email</label>
+                    <input type="email" name="username">
+                </div>
+                <div id="password">
+                    <label for="password">Password</label>
+                    <input type="password" name="password">
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+            <div class="Inner2">
+                <a href="/auth/google" role="button"><img id='googleIcon' src='../resources/images/Icons/google-icon-1.png' alt="Google sign_in Icon"><span>Sign In with Google</span></a>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
