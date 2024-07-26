@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./public/css/Cards_style.css">
+    <link rel="stylesheet" href="./public/css/style.css">
+</head>
+<body>
+    <div class="main">
+        <div id="root">
+            <div class="card">
+                <button id='k1' class="likey"><img class="like" src='./public/resources/icons/like_outline.png' onclick="do_like('k1')"></button>
+                <button class="add-to-playlist">+</button>
+                <img class="avatar" src="https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"/>
+                <h2>Kitty Xo</h2>
+                <h4>Billi</h4>
+                <h4>Bytes</h4>
+            </div>
+            <div class="card">
+                <button id='k2' class="likey"><img  class="like" src='./public/resources/icons/like_outline.png' onclick="do_like('k2')"></button>
+                <button class="add-to-playlist">+</button>
+                <img class="avatar" src="https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"/>
+                <h2>Kitty Xo</h2>
+                <h4>Billi</h4>
+                <h4>Bytes</h4>
+            </div><div class="card">
+                <button id='k3' class="likey"><img  class="like" src='./public/resources/icons/like_outline.png' onclick="do_like('k3')"></button>
+                <button class="add-to-playlist">+</button>
+                <img class="avatar" src="https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"/>
+                <h2>Kitty Xo</h2>
+                <h4>Billi</h4>
+                <h4>Bytes</h4>
+            </div>   
+              
+        </div>    
+</div>
+<script>
+    function do_like(id){
+        console.log(id);
+        var source=document.getElementById(id).querySelector("img");
+        if(source.src.includes('like_outline.png'))
+        {
+            source.src='./public/resources/icons/like_filled.png';
+            const data = { liked:id };
+        }
+        else
+        {
+            source.src='./public/resources/icons/like_outline.png';
+            const data = { disliked:id };
+        }
+
+        fetch('http://localhost:3000/like_update',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Success:', result);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+</script> 
+</body>
+
+</html>
+
+

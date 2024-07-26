@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Wonders</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Arsenal+SC:ital,wght@0,400;0,700;1,400;1,700&family=Protest+Guerrilla&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/Cards_style.css">
+</head>
+<body>
+
+    <div class="main">
+        <div id="collection">
+            
+            <form id="searchForm" action="/search" method="POST" class="hidden">
+                <div id="boxi">
+                    <a id='Back' href="/home">Back</a>
+                    <input type="text" id="searchInput" name="search" placeholder="Search...">
+                    <button type="submit" id="submitInput">Submit</button>
+                </div>
+                
+                <div id="options">
+                        <input type="radio" class="child" name="option" value="song" checked>
+                        <label for="child">Song</label>
+                        <input type="radio" class="child" name="option" value="artist">
+                        <label for="child">Artist</label>
+                        <input type="radio" class="child" name="option" value="album">
+                        <label for="child">Album</label>
+                        
+                </div>
+                
+            </form></div>
+        
+            <div class="root">
+                <%var i=0;%>
+                <%var flag=false;%>
+                <% if (locals.musicList){ %>
+                    <% if (musicList.length>0){ %>
+                    <% musicList.forEach((music,index)=>{%>
+                        <div class="card">
+                            <%for(i=0;i<likedSongs.length;i++){%>
+                            <%if (music.id==likedSongs[i].song_id){%>
+                                <button id=<%=music.id%> class="likey"><img class="like" src='resources/icons/like_filled.png' onclick="do_like('<%=music.id%>')"></button>
+                                <%flag=true;console.log(music.id);%>
+                            <%}%>
+                            <%}%>
+                            <% if (!flag){%>
+                                <button id=<%=music.id%> class="likey"><img class="like" src='resources/icons/like_outline.png' onclick="do_like('<%=music.id%>')"></button>
+                                <%}%>
+                            <%flag=false%>
+                            <img class="avatar" src=<%=music.image%> alt="image_song" onload="imageLoaded(this)"/>
+                            <h2><%=music.name%></h2>
+                            <h4><%=music.artist_name%></h4>
+                            <h4><%=music.album_name%></h4>
+                          </div>
+                    <%});%>
+                    
+                <%}else{%>
+                    <p class="errorMessage">No tracks found</p>
+                    <%}%>
+                    <%}%>
+            </div>
+        
+
+    </div>
+    <!-- <%- include("partials/footer.ejs") %> -->
+</body>
+<script>
+    let imagesToLoad = document.querySelectorAll('.avatar');
+    let loadedCount = 0;
+    
+    function imageLoaded(img) {
+        loadedCount++;
+        console.log(`Image loaded: ${img.src}`);
+    
+        if (loadedCount === imagesToLoad.length) {
+            console.log('All images loaded!');
+            // Proceed with rendering or other actions
+        }
+    }
+    
+    imagesToLoad.forEach(img => {
+        img.onload = () => imageLoaded(img);
+    });
+    </script>
+</html>

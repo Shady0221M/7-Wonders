@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Wonders</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/Cards_style.css">
+</head>
+<body>
+    <%- include("partials/header.ejs") %>
+    <div class="main">
+        <h1>Welcome</h1>
+        <div class="root">
+            <%var i=0;%>
+            <%var flag=false;%>
+            <% if (locals.musicList){ %>
+                <% if (musicList.length>0){ %>
+                <% musicList.forEach((music,index)=>{%>
+                    <div class="card" data-src="<%=music.audio%>" onclick="playMusic('<%=music.id%>',this)">
+                        <!-- <%console.log(music.audio);%> -->
+                        <%for(i=0;i<likedSongs.length;i++){%>
+                        <%if (music.id==likedSongs[i].song_id){%>
+                            <button id=<%=music.id%> class="likey"><img class="like" src='resources/icons/like_filled.png' onclick="do_like('<%=music.id%>',event)"></button>
+                            <%flag=true;console.log(music.id);%>
+                        <%}%>
+                        <%}%>
+                        <% if (!flag){%>
+                            <button id=<%=music.id%> class="likey"><img class="like" src='resources/icons/like_outline.png' onclick="do_like('<%=music.id%>')"></button>
+                            <%}%>
+                        <%flag=false%>
+                        <img class="avatar" src=<%=music.image%> alt="image_song" onload="imageLoaded(this)"/>
+                        <h2><%=music.name%></h2>
+                        <h4><%=music.artist_name%></h4>
+                        <h4><%=music.album_name%></h4>
+                    </div>
+                <%});%>
+                
+            <%}else{%>
+                <p class="errorMessage">No tracks found</p>
+                <%}%>
+                <%}%>
+        </div>
+        <div class="likedSongs">
+            <% if (locals.musicListLiked){ %>
+                <% if (musicListLiked.length>0){ %>
+                <h1>Liked Songs</h1>
+                <div class="root">
+                    <% musicListLiked.forEach((music,index)=>{%>
+                        <div class="card">
+                            <img class="avatar" src=<%=music.image_url%> alt="image_song" onload="imageLoaded(this)"/>
+                            <h2><%=music.name%></h2>
+                            <h4><%=music.artist_name%></h4>
+                            <h4><%=music.album_name%></h4>
+                          </div>
+                    <%});%>
+                    
+                <%}else{%>
+                    <p class="errorMessage">No tracks found</p>
+                    <%}%>
+                </div>
+                
+                <%}%>
+        </div>
+        <div class="addToPlayList">
+            <h4>Add to PlayList</h3>
+                <form id='create-playlist' action="/new_playlist" method="POST">
+                    <input type="text" id="searchInput" name="search" placeholder="New Playlist name">
+                    <input type="hidden" id="songIdInput" name="songId" value="">
+                    <button type="submit" id="submitInput">Create</button>
+                </form>
+                <form id='create-playlist' action="/existing_playlist" method="POST">
+                    <%if (locals.playLists){%>
+                        <%if (playLists.length>0){%>
+                            <%for(var i=0;i<likedSongs.length;i++){%>
+                                <input type="radio" class="playlist" name="playlist-chosen" value="<%=likedSongs[i].name%>" checked>
+                                <label for="playlist"><%=likedSongs[i].name%></label>
+                            <%}%>
+                        <%}%>
+                    <%}%>
+                        <button type="submit" id="submitInput">Add</button>
+                </form>
+        </div>
+    </div>
+    
+    
+    
+    <div class="audio-player">
+        <div class="control-box">
+            <button id="backward" class="control-button"><img class="control-button" src='resources/images/Icons/controls/backward.png' onclick="go_back_10s(this)"></button>
+            <button id="play" class="control-button"><img class="control-button" src='resources/images/Icons/controls/play.png' onclick="pause_play(this)"></button>
+            <button id="forward" class="control-button"><img class="control-button" src='resources/images/Icons/controls/speed.png' onclick="go_to_10s(this)"></button>
+        </div>
+        <div class="progress-box">
+            <audio id="player"></audio>
+            <p class="current-duration time">0:00</p>
+            <div class="progress-bar">
+                <input type="range" id='slide' value='0'>
+            </div>
+            <p class="total-duration time">2.55</p>
+        </div>
+    </div>
+    <%- include("partials/footer.ejs") %>
+</body>
+<script>
+    let imagesToLoad = document.querySelectorAll('.avatar');
+    let loadedCount = 0;
+    var audio=document.getElementById("player");
+    
+    function imageLoaded(img) {
+        loadedCount++;
+        console.log(`Image loaded: ${img.src}`);
+    
+        if (loadedCount === imagesToLoad.length) {
+            console.log('All images loaded!');
+        }
+    }
+    
+    imagesToLoad.forEach(img => {
+        img.onload = () => imageLoaded(img);
+    });
+
+    function do_like(id,event){
+        event.stopPropagation();
+        console.log(id);
+        var source=document.getElementById(id).querySelector("img");
+        var data;
+        if(source.src.includes('like_outline.png'))
+        {
+            source.src='resources/icons/like_filled.png';
+            data = { liked:id };
+        }
+        else
+        {
+            source.src='resources/icons/like_outline.png';
+            data = { disliked:id };
+        }
+
+        fetch('http://localhost:3000/like_update',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Success:', result);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+    function playMusic(id,card_obj){
+        var src1=card_obj.getAttribute('data-src');
+        var audio=document.getElementById("player");
+        audio.src=src1;
+        console.log(src1);
+        
+        // alert(src1);
+        audio.addEventListener('loadedmetadata', () => {
+            console.log(audio.duration);
+            document.querySelector('.total-duration').innerHTML = formatTime(audio.duration);
+            document.querySelector('.current-duration').innerHTML = '0:00';
+        }, { once: true });
+        audio.play();
+        image_tag=document.getElementById('play').querySelector("img");
+        image_tag.src="resources/images/Icons/controls/pause.png";
+        
+        audio.onerror = function() {
+    console.error('Error loading audio source');
+};
+    }
+    function formatTime(seconds) {
+    var minutes = Math.floor(seconds / 60);
+    var secs = Math.floor(seconds % 60);
+    var string=`${minutes}:${secs>10?'':0}${secs}`;
+    return string;
+}
+    function pause_play(button){
+        image_tag=document.getElementById('play').querySelector("img");;
+        var audio=document.getElementById("player");
+        if(image_tag.src.includes('play.png'))
+        {
+            audio.play();
+            image_tag.src="resources/images/Icons/controls/pause.png"
+        }
+        else{
+            audio.pause();
+            image_tag.src="resources/images/Icons/controls/play.png"
+        }
+
+    }
+    function go_back_10s(button){
+        var audio=document.getElementById("player");
+        audio.currentTime=audio.currentTime-10;
+    }
+    function go_to_10s(button){
+        var audio=document.getElementById("player");
+        audio.currentTime=audio.currentTime+10;
+    }
+
+    audio.addEventListener('timeupdate', () => {
+        progress=document.getElementById("slide");
+        audio=document.getElementById('player');
+        const value = (audio.currentTime / audio.duration) * 100;
+        progress.value = value;
+        });
+    document.getElementById('slide').addEventListener('input',()=>{
+        var value = progress.value;
+        audio=document.getElementById('player');
+        audio.currentTime=(value/100)*(audio.duration);
+    })
+    </script>
+</html>
