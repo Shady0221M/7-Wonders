@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Wonders</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Arsenal+SC:ital,wght@0,400;0,700;1,400;1,700&family=Protest+Guerrilla&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/Cards_style.css">
+</head>
+<body>
+
+    <div class="main">
+        <div id="collectioni">
+            <a id='Back' href="/home">Back</a> 
+            <h2>Playlist</h2>
+            <%if (locals.playlists){%>
+                <%if (playlists.length>0){%>
+                    <% playlists.forEach((playlist,index)=>{%>
+                        <p><%=playlist.name%></p>
+                        <div class="root">
+                            <%var i,j,flag=false;%>
+                            <%for(var j=0;j<playlist.song.length;j++){%>
+                                <%console.log(playlist.song[j]);%>
+                                <div class="card"  data-name="<%=playlist.song[j].id%>" data-src="<%=playlist.song[j].track_url%>">
+                                    <%if (locals.likedSongs){%>
+                                        <%for(var i=0;i<likedSongs.length;i++){%>
+                                        <%if (playlist.song[j].id==likedSongs[i].song_id){%>
+                                            <button id=<%=playlist.song[j].id%> class="likey"><img class="like" src='resources/icons/like_filled.png' onclick="do_like('<%=playlist.song[j].id%>')"></button>
+                                            <%flag=true;console.log(playlist.song[j].id);%>
+                                        <%}%>
+                                        <%}%>
+                                        <% if (!flag){%>
+                                            <button id=<%=playlist.song[j].id%> class="likey"><img class="like" src='resources/icons/like_outline.png' onclick="do_like('<%=playlist.song[j].id%>')"></button>
+                                            <%}%>
+                                        <%flag=false%>
+                                        <img class="avatar" src=<%=playlist.song[j].image_url%> alt="image_song" onload="imageLoaded(this)"/>
+                                        <h2><%=playlist.song[j].name%></h2>
+                                        <h4><%=playlist.song[j].artist_name%></h4>
+                                        <h4><%=playlist.song[j].album_name%></h4>
+                                    <%}%>
+                                </div>
+                            <%}%>
+                        </div>
+
+                    <%});%>
+                <%}else{%>
+                    <p class="errorMessage">No playlist found</p>
+                <%}%>
+
+            <%}else{%>
+                <p class="errorMessage">No playlists found</p>
+                <%}%> 
+    </div>
+    <!-- <%- include("partials/footer.ejs") %> -->
+</body>
+<script>
+    var imagesToLoad = document.querySelectorAll('.avatar');
+    var loadedCount = 0;
+    // var audio=document.getElementById("player");
+    
+    function imageLoaded(img) {
+        loadedCount++;
+        console.log(`Image loaded: ${img.src}`);
+    
+        if (loadedCount === imagesToLoad.length) {
+            console.log('All images loaded!');
+        }
+    }
+    
+    imagesToLoad.forEach(img => {
+        img.onload = () => imageLoaded(img);
+    });
+
+    function do_like(id,event){
+        event.stopPropagation();
+        console.log(id);
+        var source=document.getElementById(id).querySelector("img");
+        var data;
+        if(source.src.includes('like_outline.png'))
+        {
+            source.src='resources/icons/like_filled.png';
+            data = { liked:id };
+        }
+        else
+        {
+            source.src='resources/icons/like_outline.png';
+            data = { disliked:id };
+        }
+
+        fetch('http://localhost:3000/like_update',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Success:', result);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+//     function playMusic(id,card_obj){
+//         var src1=card_obj.getAttribute('data-src');
+//         var audio=document.getElementById("player");
+//         audio.src=src1;
+//         console.log(src1);
+        
+//         // alert(src1);
+//         audio.addEventListener('loadedmetadata', () => {
+//             console.log(audio.duration);
+//             document.querySelector('.total-duration').innerHTML = formatTime(audio.duration);
+//             document.querySelector('.current-duration').innerHTML = '0:00';
+//         }, { once: true });
+//         audio.play();
+//         image_tag=document.getElementById('play').querySelector("img");
+//         image_tag.src="resources/images/Icons/controls/pause.png";
+        
+//         audio.onerror = function() {
+//     console.error('Error loading audio source');
+// };
+//     }
+//     function formatTime(seconds) {
+//     var minutes = Math.floor(seconds / 60);
+//     var secs = Math.floor(seconds % 60);
+//     var string=`${minutes}:${secs>10?'':0}${secs}`;
+//     return string;
+// }
+//     function pause_play(button){
+//         image_tag=document.getElementById('play').querySelector("img");;
+//         var audio=document.getElementById("player");
+//         if(image_tag.src.includes('play.png'))
+//         {
+//             audio.play();
+//             image_tag.src="resources/images/Icons/controls/pause.png"
+//         }
+//         else{
+//             audio.pause();
+//             image_tag.src="resources/images/Icons/controls/play.png"
+//         }
+
+//     }
+//     function go_back_10s(button){
+//         var audio=document.getElementById("player");
+//         audio.currentTime=audio.currentTime-10;
+//     }
+//     function go_to_10s(button){
+//         var audio=document.getElementById("player");
+//         audio.currentTime=audio.currentTime+10;
+//     }
+
+//     audio.addEventListener('timeupdate', () => {
+//         progress=document.getElementById("slide");
+//         audio=document.getElementById('player');
+//         const value = (audio.currentTime / audio.duration) * 100;
+//         progress.value = value;
+//         });
+//     document.getElementById('slide').addEventListener('input',()=>{
+//         var value = progress.value;
+//         audio=document.getElementById('player');
+//         audio.currentTime=(value/100)*(audio.duration);
+//     });
+
+
+    // function showOverlay(button,event) {
+    //     event.stopPropagation();
+    //     const card = button.closest('.card');
+    //     const overlay = document.querySelector('.addToPlayList');
+        
+    //     const cardRect = card.getBoundingClientRect();
+    //     const mainRect = document.querySelector('.root').getBoundingClientRect();
+ 
+    //     overlay.style.top = `${cardRect.top - mainRect.top}px`;
+    //     overlay.style.left = `${cardRect.left - mainRect.left+10}px`;
+    //     console.log(cardRect.top );
+    //     console.log(cardRect.left );
+    //     console.log(mainRect.top);
+    //     console.log(mainRect.left);
+    //     document.getElementById("songIdInput").value=card.getAttribute('data-name');
+    //     document.getElementById("songIdInput2").value=card.getAttribute('data-name');
+    //     overlay.style.visibility="visible";
+        
+    // }
+    // document.getElementById('close').addEventListener("click",()=>{
+    //     document.querySelector(".addToPlayList").style.visibility="hidden";
+    // })
+    
+
+    </script>
+</html>

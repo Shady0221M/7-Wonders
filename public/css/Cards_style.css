@@ -21,6 +21,55 @@
     transition: max-width 0.5s ease, max-height 0.5s ease,
       background-color 0.6s ease, font-size 0.7s ease;
   }
+  .addToPlayList{
+    position:absolute;
+    padding:2px;
+    border-radius: 5px;
+    margin-bottom:10px;
+    max-width: 15%;
+    max-height: 29vh;
+    font-size: 0.70em;
+    border:none;
+    top:0px;
+    background-color:rgba(226, 198, 234, 0.5);
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    overflow: auto;
+    visibility:hidden;
+    z-index:2;
+  }
+  .addToPlayList form{
+    width: 100%; 
+    margin: 5px 0;
+  }
+  .addToPlayList form button{
+    width: 100%; 
+    margin-top:5px;
+    
+    /* margin: 5px 10px 0px 10px; */
+    background-color: azure;
+    color:#103643;
+    font-size:1.5em;
+    border:1px;
+  }
+  .addToPlayList input[type="text"]{
+    width:100%;
+    font-size:0.5em;
+
+  }
+  .addToPlayList #close{
+    height:14%;
+    width:12%;
+    font-size:0.6rem;
+    border-radius:50%; 
+    background-color:red;
+    color:white;
+    position:absolute;
+    top:2px;
+    right:2px;
+    
+  }
   .avatar {
     height: auto;
     width: 95%;
@@ -40,6 +89,8 @@
     text-align:center;
     /* overflow-y: auto; */
     margin-top:5rem;
+    position:relative;
+    
   }
   h4 {
     color: antiquewhite;
@@ -64,7 +115,6 @@
     background-color: #d6e7bd;   
 }
 .add-to-playlist{
-  /* border-radius: 50%; */
   height:1rem;
   width:1rem;
   border-radius: 50%;

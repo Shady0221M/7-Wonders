@@ -25,6 +25,10 @@ h1{
     justify-content: space-evenly;
 
 }
+.main > *{
+    flex:1;
+    width:100%;
+}
 .audio-player{
     position:fixed;
     bottom:30px;
@@ -130,15 +134,33 @@ h1{
     box-shadow: inset;
     font-family: "Arsenal SC", sans-serif; 
 }
-#collection{
+#collection,#collectioni{
    display:flex;
    justify-content: center;
    height:3rem;
    margin-top:4rem;
    gap:2rem;
    align-items:center;
+   text-align:center;
    font-size:xx-large;
-   
+}
+#collectioni .root{
+    margin-top:2rem;
+}
+#collectioni{
+    flex-direction:column;
+    align-items:center;
+    color:#465c46;
+}
+#collectioni > #Back{
+    position:absolute;
+    top:5%;
+    left:5%;
+    width:50px;
+}
+#collectioni > * {
+    flex:1;
+    width:100%;
 }
 #options{
     color:rgb(184, 108, 108);

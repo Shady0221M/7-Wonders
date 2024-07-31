@@ -75,20 +75,10 @@ app.get("/home",async(req,res)=>{
         }
       });
       const songBundle=result.data.results;
-      // for(var i=0;i<songBundle.length;i++){
-      //   console.log(songBundle[i]);
-      // }
-      // console.log(req.user.id);
       const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
-      // console.log(result2.rows);
-      // console.log(JSON.stringify(result.data.results));
-      // for(var i=0;i<songBundle.length;i++){
-      //   await db.query(`INSERT INTO songs(id,name,artist_name,album_name,image_url,track_url) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT (id) DO NOTHING`,[songBundle[i].id,songBundle[i].name,songBundle[i].artist_name,songBundle[i].album_name,songBundle[i].image,songBundle[i].audio]);
-      //   console.log(JSON.stringify(songBundle[i]));
-      // }
-      const result3=await db.query('SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1',[parseInt(req.user.id, 10)]);
-
-      res.render("home.ejs",{musicList:songBundle,likedSongs:result2.rows,musicListLiked:result3.rows});
+      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      res.render("home.ejs",{musicList:songBundle,likedSongs:result2.rows,musicListLiked:result3.rows,playLists:result4.rows});
     }
     catch(err){
       console.log("Error in retrieving data to home page ",err);
@@ -100,6 +90,25 @@ app.get("/home",async(req,res)=>{
 app.get("/search",(req,res)=>{
   if (req.isAuthenticated()){
     res.render("search.ejs");
+  }
+  else{
+    res.redirect('/');
+  }
+});
+app.get("/playlist",async (req,res)=>{
+  if (req.isAuthenticated()){
+    const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+      
+      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
+    const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      var playlists=result4.rows;
+      // console.log(playlists);
+      for(var i=0;i<playlists.length;i++){
+        const result5=await db.query(`SELECT * from songs inner join playlist on songs.id=playlist.song_id where playlist.name=$1`,[playlists[i].name]);
+        playlists[i].song=result5.rows;
+      }
+      // console.log(playlists);
+      res.render("playlist.ejs",{playlists,likedSongs:result2.rows,musicListLiked:result3.rows});
   }
   else{
     res.redirect('/');
@@ -208,9 +217,7 @@ app.post("/register", async (req, res) => {
     }
   });
 //Authorize jamendo user
-app.post("/new_playlist",(req,res)=>{
 
-});
 app.post("/search",async (req,res)=>{
   // console.log(req.body.search.toLowerCase());
   // console.log(req.body.option);
@@ -231,8 +238,10 @@ if (req.body.option=="song")
       const songBundle=result.data.results;
       console.log(req.user.id);
       const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
       console.log(result2.rows);
-      res.render("search.ejs",{musicList:songBundle,likedSongs:result2.rows});
+      const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      res.render("search.ejs",{musicList:songBundle,likedSongs:result2.rows,musicListLiked:result3.rows,playLists:result4.rows});
 
   }
   catch(err){
@@ -315,6 +324,7 @@ app.post("/like_update",async(req,res)=>{
   try{
     if (req.isAuthenticated()){
       const id=req.user.id;
+     
       console.log("User id:");console.log(req.user.id);
       if(data.liked){
           await db.query(`INSERT INTO likedsongs values($1,$2)`,[req.user.id,data.liked]);
@@ -331,10 +341,43 @@ app.post("/like_update",async(req,res)=>{
     console.error('Error handling like update:', err);
         res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-  
-
 }
 );
+app.post("/new_playlist",async(req,res)=>{
+  console.log(req.body);
+  try{
+    if(req.isAuthenticated()){
+      if(req.body.search!=''){
+        await db.query(`INSERT into playlist values($1,$2,$3)`,[req.body.search,req.user.id,req.body.songId]);
+        res.redirect('/home');
+      }else{
+        res.redirect("/");
+      }
+
+    }else{
+      res.redirect("/");
+    }
+  }catch(err){
+    console.error('Error handling playlist creation and addition update:', err);
+  }
+});
+app.post("/existing_playlist",async(req,res)=>{
+    console.log(req.body);
+    try{
+      if(req.isAuthenticated()){
+        
+          await db.query(`INSERT into playlist values($1,$2,$3)`,[req.body.playlistChosen,req.user.id,req.body.songId]);
+          res.redirect('/home');
+        
+  
+      }else{
+        res.redirect("/");
+      }
+    }catch(err){
+      console.error('Error handling adding song in existing playlist :', err);
+    }
+});
+
 passport.use("local",
     new Strategy(async function verify(username, password, cb) {
       console.log(username);
