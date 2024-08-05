@@ -22,7 +22,7 @@
                             <%var i,j,flag=false;%>
                             <%for(var j=0;j<playlist.song.length;j++){%>
                                 <%console.log(playlist.song[j]);%>
-                                <div class="card"  data-name="<%=playlist.song[j].id%>" data-src="<%=playlist.song[j].track_url%>">
+                                <div class="card"  data-name="<%=playlist.song[j].id%>" data-src="<%=playlist.song[j].track_url%>"  onclick="playMusic('<%=playlist.song[j].id%>',this)">
                                     <%if (locals.likedSongs){%>
                                         <%for(var i=0;i<likedSongs.length;i++){%>
                                         <%if (playlist.song[j].id==likedSongs[i].song_id){%>
@@ -51,8 +51,11 @@
             <%}else{%>
                 <p class="errorMessage">No playlists found</p>
                 <%}%> 
+                
+        </div>
     </div>
     <%- include("audio_player.ejs")%>
+    
     <!-- <%- include("partials/footer.ejs") %> -->
 </body>
 <script src="js/audio_player.js"></script>
@@ -153,7 +156,7 @@
 //         var audio=document.getElementById("player");
 //         audio.currentTime=audio.currentTime+10;
 //     }
-
+    
 //     audio.addEventListener('timeupdate', () => {
 //         progress=document.getElementById("slide");
 //         audio=document.getElementById('player');

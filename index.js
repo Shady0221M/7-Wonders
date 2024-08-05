@@ -262,6 +262,7 @@ app.post("/search",async (req,res)=>{
   // console.log(req.body.search.toLowerCase());
   // console.log(req.body.option);
   // console.log(req.body);
+  var songBundle;
 if (req.isAuthenticated()){
 if (req.body.option=="song")
 {
@@ -275,7 +276,7 @@ if (req.body.option=="song")
       }
     });
 
-      const songBundle=result.data.results;
+      songBundle=result.data.results;
       console.log(req.user.id);
       const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
       const result3=await pool.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
@@ -300,7 +301,7 @@ else if (req.body.option=="artist")
       }
     });
 
-    const songBundle=result.data.results;
+    songBundle=result.data.results;
     console.log(req.user.id);
     const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
     console.log(result2.rows);
@@ -321,7 +322,7 @@ else{
         limit:20
       }
     });
-    const songBundle=result.data.results;
+    songBundle=result.data.results;
     console.log(req.user.id);
     const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
     console.log(result2.rows);
@@ -331,11 +332,17 @@ else{
   catch(err){
     console.log("Error in retrieving data to home page ",err);
   }
-}
-}
-     
-  
-})
+} 
+
+  for (var song of songBundle){
+    console.log(song);
+    var existingSong=await pool.query(`SELECT name from songs where id=$1`,[song.id]);
+    if (existingSong.rows.length==0){
+      await pool.query(`INSERT INTO songs (id, name, artist_name, album_name,image_url,track_url) VALUES ($1, $2, $3, $4,$5,$6)`,
+            [song.id, song.name, song.artist_name, song.album_name,song.album_image,song.audio]);
+    }
+  }
+}});
 
 
 app.post("/like_update",async(req,res)=>{

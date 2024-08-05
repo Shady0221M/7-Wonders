@@ -113,13 +113,13 @@
   }
 .like,.likey{
     border-radius: 50%;
-    background-color: #d6e7bd;   
+    background-color: #938920;   
 }
 .add-to-playlist{
   height:1rem;
   width:1rem;
   border-radius: 50%;
-  background-color: #d6e7bd;
+  background-color: #80dde3;
   color:#103643; 
   position:absolute;
   left:2%;
