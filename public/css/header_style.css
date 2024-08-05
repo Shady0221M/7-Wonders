@@ -7,8 +7,9 @@ nav{
     align-items: center;
     height:8vh;
     justify-content: space-between;
-    background-color:#ECFFE6;
+    background-color:#8f8f07;
     font-size: x-large;
+    border-radius:10px;
 }
 ul{ width:30vw;
     display:flex;
@@ -19,7 +20,7 @@ ul{ width:30vw;
     font-family: "Arsenal SC", sans-serif;   
 }
 .logo{
-    color:#399918;
+    color:#932406;
     margin:0 15px;
     font-family: "Protest Guerrilla", sans-serif;
 }

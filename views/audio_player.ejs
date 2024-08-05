@@ -1,0 +1,15 @@
+<div class="audio-player">
+    <div class="control-box">
+        <button id="backward" class="control-button"><img class="control-button" src='resources/images/Icons/controls/backward.png' onclick="go_back_10s(this)"></button>
+        <button id="play" class="control-button"><img class="control-button" src='resources/images/Icons/controls/play.png' onclick="pause_play(this)"></button>
+        <button id="forward" class="control-button"><img class="control-button" src='resources/images/Icons/controls/speed.png' onclick="go_to_10s(this)"></button>
+    </div>
+    <div class="progress-box">
+        <audio id="player"></audio>
+        <p class="current-duration time">0:00</p>
+        <div class="progress-bar">
+            <input type="range" id='slide' value='0'>
+        </div>
+        <p class="total-duration time">2.55</p>
+    </div>
+</div>

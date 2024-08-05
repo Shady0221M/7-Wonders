@@ -1,13 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
-import pg from "pg";
-import bcrypt from "bcrypt";
+import pkg from 'pg';
+const { Pool } = pkg;
+import bcrypt from "bcrypt";//hashing passwords and comparisons
+import connectPgSimple from 'connect-pg-simple';//to store sessions(id) in db
 import passport from "passport";
-import { Strategy } from "passport-local";
-import GoogleStrategy from "passport-google-oauth2";
+import { Strategy } from "passport-local";//to handle common username-pwd auth
+import GoogleStrategy from "passport-google-oauth2";//to handle google auth
+import OAuth2Strategy from 'passport-oauth2';//to handle dauth 
 import session from "express-session";
 import env from "dotenv";
 import axios from "axios";
+import qs from "qs";
 // import React from "react";
 // import Card from "./components/Card";
 // import "./public/css/Cards_style.css";
@@ -17,13 +21,32 @@ import ejs from "ejs";
 const app = express();
 const port = 3000;
 const saltRounds = 10;
+const PgSession = connectPgSimple(session);
 env.config();
+
+//db init 
+const pool = new Pool({
+  user: process.env.NEW_USER,
+  host: process.env.NEW_HOST,
+  database: process.env.NEW_DATABASE,
+  password: process.env.NEW_PASSWORD,
+  port: process.env.NEW_PORT,
+});
+// db.connect();
 
 app.use(
     session({
+      store: new PgSession({
+        pool, // Connection pool
+        tableName: 'session', // Table name for storing sessions
+      }),
+      
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: true,
+      cookie:{
+        maxAge:1000*60*60,
+      }
     })
   );
   app.use(express.json());
@@ -32,15 +55,7 @@ app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
 
-//db init 
-const db = new pg.Client({
-    user: process.env.NEW_USER,
-    host: process.env.NEW_HOST,
-    database: process.env.NEW_DATABASE,
-    password: process.env.NEW_PASSWORD,
-    port: process.env.NEW_PORT,
-  });
-db.connect();
+
 
 //get routes
 app.get("/", (req, res) => {
@@ -55,14 +70,14 @@ app.get("/register", (req, res) => {
     res.render("register.ejs");
   });
   
-app.get("/logout", (req, res) => {
-    req.logout(function (err) {
-      if (err) {
-        return next(err);
-      }
-      res.redirect("/");
-    });
-  });
+// app.get("/logout", (req, res) => {
+//     req.logout(function (err) {
+//       if (err) {
+//         return next(err);
+//       }
+//       res.redirect("/");
+//     });
+//   });
 app.get("/home",async(req,res)=>{
   if (req.isAuthenticated()){
     try{
@@ -75,9 +90,9 @@ app.get("/home",async(req,res)=>{
         }
       });
       const songBundle=result.data.results;
-      const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
-      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
-      const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result3=await pool.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result4=await pool.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
       res.render("home.ejs",{musicList:songBundle,likedSongs:result2.rows,musicListLiked:result3.rows,playLists:result4.rows});
     }
     catch(err){
@@ -95,21 +110,30 @@ app.get("/search",(req,res)=>{
     res.redirect('/');
   }
 });
+app.get("/about",(req,res)=>{
+  if (req.isAuthenticated()){
+    res.render("about.ejs");
+  }
+  else{
+    res.redirect('/');
+  }
+});
 app.get("/playlist",async (req,res)=>{
   if (req.isAuthenticated()){
-    const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+    const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
       
-      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
-    const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result3=await pool.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
+    const result4=await pool.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
       var playlists=result4.rows;
       // console.log(playlists);
       for(var i=0;i<playlists.length;i++){
-        const result5=await db.query(`SELECT * from songs inner join playlist on songs.id=playlist.song_id where playlist.name=$1`,[playlists[i].name]);
+        const result5=await pool.query(`SELECT * from songs inner join playlist on songs.id=playlist.song_id where playlist.name=$1`,[playlists[i].name]);
         playlists[i].song=result5.rows;
       }
       // console.log(playlists);
       res.render("playlist.ejs",{playlists,likedSongs:result2.rows,musicListLiked:result3.rows});
-  }
+      
+    }
   else{
     res.redirect('/');
   }
@@ -123,6 +147,22 @@ app.get("/auth/google/home",passport.authenticate("google",{
     failureRedirect:"/login",
     successRedirect:"/home"
 }));
+app.get("/auth/dauth",
+  passport.authenticate('dauth')
+  //async (req,res)=>{
+  // try{
+  //   res.redirect(`https://auth.delta.nitt.edu/authorize?client_id=${process.env.DAUTH_CLIENT_ID}&redirect_uri=${encodeURIComponent('http://localhost:3000/auth/dauth/verified')}&response_type=code&grant_type=authorisation_code&scope=email+openid+profile`);
+  // }catch(err){
+  //   console.log("Error in making request to DAuth:",err);
+  //   res.status(500).send("Error initiating DAuth");
+  // }
+//}
+);
+app.get("/auth/dauth/verified",passport.authenticate('dauth',{
+  failureRedirect:"/login",
+    successRedirect:"/home"
+}));
+
 // app.get("/auth/google/home",passport.authenticate("google",{
 //     failureRedirect:"/login",
 //   }),async (req,res)=>{
@@ -144,8 +184,8 @@ app.get("/auth/google/home",passport.authenticate("google",{
 //   });
 // app.get("/auth/jamendo",(req,res)=>{
 //   try{
-//     // const result = await axios.get(`https://api.jamendo.com/v3.0/oauth/authorize?client_id=${process.env.JAMENDO_CLIENT_ID}&redirect_uri=http://localhost:3000/auth/jamendo/verified&scope=music&response_type=code`);
-//     // console.log(result.data);
+//      const result = await axios.get(`https://api.jamendo.com/v3.0/oauth/authorize?client_id=${process.env.JAMENDO_CLIENT_ID}&redirect_uri=http://localhost:3000/auth/jamendo/verified&scope=music&response_type=code`);
+//      console.log(result.data);
     
 //     res.redirect(`https://api.jamendo.com/v3.0/oauth/authorize?client_id=${process.env.JAMENDO_CLIENT_ID}&redirect_uri=${encodeURIComponent("http://localhost:3000/auth/jamendo/verified")}&scope=music&response_type=code`);
 //   }
@@ -189,7 +229,7 @@ app.post("/register", async (req, res) => {
     const password = req.body.password;
   
     try {
-      const checkResult = await db.query("SELECT * FROM users WHERE email = $1", [
+      const checkResult = await pool.query("SELECT * FROM users WHERE email = $1", [
         email,
       ]);
   
@@ -200,7 +240,7 @@ app.post("/register", async (req, res) => {
           if (err) {
             console.error("Error hashing password:", err);
           } else {
-            const result = await db.query(
+            const result = await pool.query(
               "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
               [email, hash]
             );
@@ -237,10 +277,10 @@ if (req.body.option=="song")
 
       const songBundle=result.data.results;
       console.log(req.user.id);
-      const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
-      const result3=await db.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result3=await pool.query(`SELECT * FROM songs inner join likedsongs on songs.id=likedsongs.song_id where likedsongs.user_id=$1`,[parseInt(req.user.id, 10)]);
       console.log(result2.rows);
-      const result4=await db.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
+      const result4=await pool.query(`SELECT  DISTINCT playlist.name FROM playlist inner join users on playlist.user_id=users.id where playlist.user_id=$1`,[parseInt(req.user.id, 10)]);
       res.render("search.ejs",{musicList:songBundle,likedSongs:result2.rows,musicListLiked:result3.rows,playLists:result4.rows});
 
   }
@@ -262,7 +302,7 @@ else if (req.body.option=="artist")
 
     const songBundle=result.data.results;
     console.log(req.user.id);
-    const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+    const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
     console.log(result2.rows);
     res.render("search.ejs",{musicList:songBundle,likedSongs:result2.rows});
    
@@ -283,7 +323,7 @@ else{
     });
     const songBundle=result.data.results;
     console.log(req.user.id);
-    const result2=await db.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
+    const result2=await pool.query(`SELECT song_id from likedsongs where user_id=$1`,[parseInt(req.user.id, 10)]);
     console.log(result2.rows);
     res.render("search.ejs",{musicList:songBundle,likedSongs:result2.rows});
     
@@ -297,27 +337,7 @@ else{
   
 })
 
-passport.use("google",new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/google/home",
-    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",//@@@@@@@@@@@@@@@@@@@@@
-  },
-    async(accessToken, refreshToken, profile, cb)=>{
-    // console.log(profile);
-    try{
-      const result= await db.query("Select * from users where email=$1",[profile.email]);
-      if(result.rows.length==0){
-        const NewUser=await db.query("Insert into users(email,password) values($1,$2)",[profile.email,"google"]);
-        cb(null,NewUser.rows[0])
-      }else{
-        //existing user
-        cb(null,result.rows[0]);
-      }
-    }catch(err){
-      cb(err);
-    }
-  }));
+
 app.post("/like_update",async(req,res)=>{
   const data=req.body;
   console.log("req.body");console.log(req.body);
@@ -327,10 +347,10 @@ app.post("/like_update",async(req,res)=>{
      
       console.log("User id:");console.log(req.user.id);
       if(data.liked){
-          await db.query(`INSERT INTO likedsongs values($1,$2)`,[req.user.id,data.liked]);
+          await pool.query(`INSERT INTO likedsongs values($1,$2)`,[req.user.id,data.liked]);
       }
       else if (data.disliked){
-          await db.query(`DELETE FROM likedsongs where user_id=$1 and  song_id=$2`,[req.user.id,data.disliked]);
+          await pool.query(`DELETE FROM likedsongs where user_id=$1 and  song_id=$2`,[req.user.id,data.disliked]);
       }
       res.status(200).json({ success: true });
       
@@ -348,7 +368,7 @@ app.post("/new_playlist",async(req,res)=>{
   try{
     if(req.isAuthenticated()){
       if(req.body.search!=''){
-        await db.query(`INSERT into playlist values($1,$2,$3)`,[req.body.search,req.user.id,req.body.songId]);
+        await pool.query(`INSERT into playlist values($1,$2,$3)`,[req.body.search,req.user.id,req.body.songId]);
         res.redirect('/home');
       }else{
         res.redirect("/");
@@ -366,7 +386,7 @@ app.post("/existing_playlist",async(req,res)=>{
     try{
       if(req.isAuthenticated()){
         
-          await db.query(`INSERT into playlist values($1,$2,$3)`,[req.body.playlistChosen,req.user.id,req.body.songId]);
+          await pool.query(`INSERT into playlist values($1,$2,$3)`,[req.body.playlistChosen,req.user.id,req.body.songId]);
           res.redirect('/home');
         
   
@@ -377,12 +397,66 @@ app.post("/existing_playlist",async(req,res)=>{
       console.error('Error handling adding song in existing playlist :', err);
     }
 });
+passport.use('dauth', new OAuth2Strategy({
+    authorizationURL: 'https://auth.delta.nitt.edu/authorize',
+    tokenURL: 'https://auth.delta.nitt.edu/api/oauth/token',
+    clientID:process.env.DAUTH_CLIENT_ID,
+    clientSecret: process.env.DAUTH_CLIENT_SECRET,
+    callbackURL: 'http://localhost:3000/auth/dauth/verified',
+    scope: 'email profile user',
+    
+},
+async(accessToken, refreshToken, profile, cb)=>{
+  
+  // console.log(accessToken);
+  try{
+      const result2 = await axios.post('https://auth.delta.nitt.edu/api/resources/user', {}, {
+      headers: { Authorization: `Bearer ${accessToken}` }});
+      
+      // console.log(result2.data);
+      
+    const result= await pool.query("Select * from users where email=$1",[result2.data.email]);
+    if(result.rows.length==0){
+      const NewUser=await pool.query("Insert into users(email,password) values($1,$2)",[result2.data.email,"dauth"]);
+      cb(null,NewUser.rows[0])
+    }else{
+      //existing user
+      cb(null,result.rows[0]);
+    }
+  }catch(err){
+    cb(err);
+  }
+}
+));
+passport.use("google",new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/google/home",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",//@@@@@@@@@@@@@@@@@@@@@
+},
+  async(accessToken, refreshToken, profile, cb)=>{
+  // console.log(profile);
+  console.log("0000000000000000000000000000");
+  console.log(accessToken);
+  try{
+    const result= await pool.query("Select * from users where email=$1",[profile.email]);
+    if(result.rows.length==0){
+      const NewUser=await pool.query("Insert into users(email,password) values($1,$2)",[profile.email,"google"]);
+      cb(null,NewUser.rows[0])
+    }else{
+      //existing user
+      cb(null,result.rows[0]);
+    }
+  }catch(err){
+    cb(err);
+  }
+}));
 
 passport.use("local",
     new Strategy(async function verify(username, password, cb) {
       console.log(username);
       try {
-        const result = await db.query("SELECT * FROM users WHERE email = $1 ", [
+        const result = await pool.query("SELECT * FROM users WHERE email = $1 ", [
           username,
         ]);
         if (result.rows.length > 0) {
@@ -422,4 +496,8 @@ passport.deserializeUser((user, cb) => {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
-  
+process.on('exit', () => {
+    pool.end(() => {
+      console.log('Pool has ended');
+    });
+  });

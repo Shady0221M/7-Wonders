@@ -30,7 +30,7 @@ body{
     align-items:center;
 }
 form *{
-    margin:10px auto;
+    margin:7px auto;
 }
 input{
     width:25vh;
@@ -70,8 +70,9 @@ label{
 h1{
     color:azure;
     font-size: xx-large;
+    margin-bottom:10px;
 }
-a{
+#signIn-google,#signIn-dauth{
     display: inline-flex; 
     align-items:center;
     padding: 10px 20px; 
@@ -86,12 +87,26 @@ a{
     transition: background-color 0.5s ease;
     font-size: large;
 }
-a:hover{
+#signIn-dauth{
+    background-color: #faf7f3; 
+    color:rgb(16, 214, 9);
+}
+#signIn-google:hover,#signIn-dauth:hover{
     background-color: #292109;
     border-color: #292109;
     color:bisque;
 }
+#signIn-dauth:hover{
+    background-color: rgb(16, 214, 9);
+    color:rgb(249, 249, 249); 
+}
 #googleIcon{
+    max-width:5vh;
+    max-height:5vh;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+#dauthIcon{
     max-width:5vh;
     max-height:5vh;
     vertical-align: middle;
@@ -100,7 +115,7 @@ a:hover{
 .Inner2{
     margin:0 auto;
     width:40vh;
-    max-height:10vh;
+    max-height:20vh;
     display:flex;
     flex-direction:column;
 }

@@ -74,7 +74,7 @@
                                 <button id=<%=music.id%> class="likey"><img class="like" src='resources/icons/like_outline.png' onclick="do_like('<%=music.id%>',event)"></button>
                                 <%}%>
                             <%flag=false%>
-                            <img class="avatar" src=<%=music.image_url%> alt="image_song" onload="imageLoaded(this)"/>
+                            <img class="avatar" src=<%=music.image%> alt="image_song" onload="imageLoaded(this)"/>
                             <h2><%=music.name%></h2>
                             <h4><%=music.artist_name%></h4>
                             <h4><%=music.album_name%></h4>
@@ -86,11 +86,11 @@
                     <%}%>
                     <%}%>
             </div>
-        
-
     </div>
+    <%- include("audio_player.ejs")%>
     <!-- <%- include("partials/footer.ejs") %> -->
 </body>
+<script src="js/audio_player.js"></script>
 <script>
         let imagesToLoad = document.querySelectorAll('.avatar');
     let loadedCount = 0;

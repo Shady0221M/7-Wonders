@@ -52,8 +52,10 @@
                 <p class="errorMessage">No playlists found</p>
                 <%}%> 
     </div>
+    <%- include("audio_player.ejs")%>
     <!-- <%- include("partials/footer.ejs") %> -->
 </body>
+<script src="js/audio_player.js"></script>
 <script>
     var imagesToLoad = document.querySelectorAll('.avatar');
     var loadedCount = 0;

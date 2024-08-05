@@ -23,25 +23,25 @@ body{
 }
 .Inner1{
     position:absolute;
-    margin:0 auto;
+    /* margin:auto auto; */
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
 }
 form *{
-    margin:10px auto;
+    margin:6px auto;
 }
 input{
     width:25vh;
 }
 button{
     padding: 10px 20px; 
-    margin: 10px; 
+    margin: 8px; 
     text-decoration: none; 
-    background-color: #9cc5e0; 
+    background-color: #c49c0d; 
     color:rgb(66, 3, 3);
-    border: 1px solid #0fe0ce; 
+    border: 1px solid #af390a; 
     border-radius: 5px; 
     text-align: center;
     cursor: pointer; 
@@ -49,8 +49,8 @@ button{
     font-size: large;
 }
 button:hover{
-    background-color: #16b4c6;
-    border-color: #292109;
+    background-color: #ca3e10;
+    border-color: #4b3904;
     color:bisque;
 }
 form{
@@ -93,16 +93,30 @@ a:hover{
     border-color: #292109;
     color:bisque;
 }
+#signIn-dauth{
+    background-color: #fdfdfd; 
+    color:rgb(16, 214, 9);
+}
+#signIn-dauth:hover{
+    background-color: rgb(16, 214, 9);
+    color:rgb(249, 249, 249); 
+}
 #googleIcon{
     max-width:5vh;
     max-height:5vh;
     vertical-align: middle;
     margin-right: 2px;
 }
+#dauthIcon{
+    max-width:5vh;
+    max-height:5vh;
+    vertical-align: middle;
+    margin-right: 2px;
+}
 .Inner2{
-    margin:0 auto;
+    /* margin:0 auto; */
     width:40vh;
-    max-height:10vh;
+    max-height:20vh;
     display:flex;
     flex-direction:column;
 }
